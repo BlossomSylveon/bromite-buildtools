@@ -40,7 +40,7 @@ RUN apt-get update && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     apt-key fingerprint 0EBFCD88 && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
-    apt-get update && apt-get install --no-install-recommends -y docker-ce docker-ce-cli containerd.io=1.4.4-1 && \
+    apt-get update && apt-get install --no-install-recommends -y docker-ce docker-ce-cli && \
     apt-get clean -y && \
     rm -rf /var/cache/debconf/* /var/lib/apt/lists/* /var/log/* /tmp/* /var/tmp/* \
            /usr/share/doc/* /usr/share/man/* /usr/share/local/* && \
@@ -77,7 +77,7 @@ RUN useradd -m runner \
 
 # Build args
 ARG TARGETPLATFORM=amd64
-ARG RUNNER_VERSION=2.302.5
+ARG RUNNER_VERSION=2.304.0
 WORKDIR /runner
 
 # Runner download supports amd64 as x64
@@ -109,10 +109,15 @@ RUN chmod +x ./patched/runsvc.sh /usr/local/bin/startup.sh
 
 USER runner
 
-ENV HTTP_PROXY="http://172.18.0.1:8118"
-ENV HTTPS_PROXY="http://172.18.0.1:8118"
-ENV http_proxy="http://172.18.0.1:8118"
-ENV https_proxy="http://172.18.0.1:8118"
+RUN wget https://github.com/docker/buildx/releases/download/v0.10.4/buildx-v0.10.4.linux-amd64 && \
+    mkdir -p /home/runner/.docker/cli-plugins && \
+    mv buildx-v0.10.4.linux-amd64 /home/runner/.docker/cli-plugins/docker-buildx && \
+    chmod +x /home/runner/.docker/cli-plugins/docker-buildx
+
+ENV HTTP_PROXY="http://127.0.0.1:8118"
+ENV HTTPS_PROXY="http://127.0.0.1:8118"
+ENV http_proxy="http://127.0.0.1:8118"
+ENV https_proxy="http://127.0.0.1:8118"
 COPY docker.default /etc/default/docker
 COPY proxy.conf /etc/apt/apt.conf.d/proxy.conf
 
